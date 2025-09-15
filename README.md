@@ -20,3 +20,9 @@
 - **Внешние API:** DaData API
 - **Безопасность:** CSRF protection, хеширование паролей
 
+Видео работы проверки отзыва на негатив
+https://github.com/leesenok-in-code/ai-review-moderation/demo1.mp4
+
+Видео успешной отправки отзыва админу и размещение на сайт
+https://github.com/leesenok-in-code/ai-review-moderation/demo2.mp4
+
