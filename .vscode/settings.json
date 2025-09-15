@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "C:\\kursovaia3\\app\\.venv\\Lib\\site-packages"
+    ],
+    "python.analysis.diagnosticMode": "workspace",
+    "python.languageServer": "Pylance"
+}

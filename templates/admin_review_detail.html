@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Детали отзыва</title>
+    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1><i class="fas fa-file-alt"></i> Отзыв #{{ review.id }}</h1>
+            <a href="/admin/dashboard" class="back-btn">&larr; Назад</a>
+        </header>
+
+        <div class="review-detail">
+            <div class="meta-info">
+                <i class="fas fa-calendar-alt"></i> 
+                Дата создания: {{ review.created_at.strftime('%d.%m.%Y %H:%M') }}
+            </div>
+
+            {% if review.scenario_type %}
+            <div class="review-section">
+                <h2><i class="fas fa-scroll"></i> Детали сценария</h2>
+                <div class="detail-grid">
+                    {% if review.scenario_type == 'prepayment' %}
+                        <div class="detail-item">
+                            <span>Тип:</span>
+                            <span>Предоплата не выполнена</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Сумма:</span>
+                            <span>{{ review.amount }} {{ review.currency }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Дата платежа:</span>
+                            <span>{{ review.payment_date.strftime('%d.%m.%Y') if review.payment_date else 'Не указана' }}</span>
+                        </div>
+                    {% elif review.scenario_type == 'noprepayment' %}
+                        <div class="detail-item">
+                            <span>Тип:</span>
+                            <span>Работа выполнена, не оплачено</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Сумма:</span>
+                            <span>{{ review.amount }} {{ review.currency }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Дата планового платежа:</span>
+                            <span>{{ review.planned_payment_date.strftime('%d.%m.%Y') if review.planned_payment_date else 'Не указана' }}</span>
+                        </div>
+                    {% elif review.scenario_type == 'other' %}
+                        <div class="detail-item">
+                            <span>Тип:</span>
+                            <span>Другое</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Причина:</span>
+                            <span>{{ review.custom_reason }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if review.person_type == 'jur' %}
+            <div class="review-section">
+                <h2><i class="fas fa-building"></i> Реквизиты компании</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>ИНН:</span>
+                        <span>{{ review.inn }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>ОГРН:</span>
+                        <span>{{ review.ogrn }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Название:</span>
+                        <span>{{ review.name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Адрес:</span>
+                        <span>{{ review.address }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="review-section">
+                <h2><i class="fas fa-user-tie"></i> Продавец/Исполнитель</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>ФИО:</span>
+                        <span>{{ review.seller_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Город:</span>
+                        <span>{{ review.seller_city }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Телефон:</span>
+                        <span>{{ review.seller_phone }}</span>
+                    </div>
+                    {% if review.seller_is_company %}
+                    <div class="detail-item">
+                        <span>Компания:</span>
+                        <span>{{ review.seller_company_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>ИНН компании:</span>
+                        <span>{{ review.seller_inn }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Адрес компании:</span>
+                        <span>{{ review.seller_company_address }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="review-section">
+                <h2><i class="fas fa-user"></i> Покупатель/Заказчик</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>ФИО:</span>
+                        <span>{{ review.buyer_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Город:</span>
+                        <span>{{ review.buyer_city }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Телефон:</span>
+                        <span>{{ review.buyer_phone }}</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="review-section">
+                <h2><i class="fas fa-comment-dots"></i> Текст отзыва</h2>
+                <div class="content-box">
+                    {{ review.content }}
+                </div>
+                <div class="detail-item">
+                    <span>Email:</span>
+                    <span>{{ review.email }}</span>
+                </div>
+            </div>
+
+            {% if review.filename %}
+            <div class="review-section">
+                <h2><i class="fas fa-file-alt"></i> Документы для проверки</h2>
+                <div class="document-preview">
+                    {% set ext = review.filename.split('.')[-1].lower() %}
+                    {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                        <img src="{{ url_for('uploaded_file', filename=review.filename) }}" 
+                            class="document-image"
+                            alt="Прикрепленный документ">
+                    {% else %}
+                        <a href="{{ url_for('uploaded_file', filename=review.filename) }}" 
+                            class="document-link"
+                            download>
+                            <i class="fas fa-file-download"></i> Скачать {{ ext|upper }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if review.images %}
+            <div class="review-section">
+                <h2><i class="fas fa-images"></i> Изображения выполненной работы</h2>
+                <div class="images-grid">
+                    {% for image in review.images|fromjson %}
+                    <div class="image-item">
+                        <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="Изображение работы">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="admin-actions">
+                <form action="/admin/approve/{{ review.id }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-approve">
+                        <i class="fas fa-check"></i> Одобрить
+                    </button>
+                </form>
+
+                <form action="/admin/reject/{{ review.id }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-reject">
+                        <i class="fas fa-times"></i> Отклонить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

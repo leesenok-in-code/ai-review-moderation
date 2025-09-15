@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель модерации</title>
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1><i class="fas fa-tasks"></i> Модерация отзывов</h1>
+            <a href="/admin/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </a>
+        </header>
+
+        <div class="reviews-list">
+            {% if reviews.items %}
+                {% for review in reviews.items %}
+                    <div class="review-card-container">
+                        <a href="/admin/review/{{ review.id }}" class="review-card-link">
+                            <div class="review-card">
+                                <div class="review-meta">
+                                    <span class="review-id">#{{ review.id }}</span>
+                                    <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                    <span class="review-scenario">{{ review.scenario }}</span>
+                                </div>
+
+                                <div class="review-content">
+                                    <p class="review-text">{{ review.content|truncate(150) }}</p>
+                                    
+                                    {% if review.filename %}
+                                        <div class="file-attachment">
+                                            <i class="fas fa-paperclip"></i>
+                                            {{ review.filename|truncate(30) }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="review-actions">
+                            <form action="/admin/approve/{{ review.id }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-approve">
+                                    <i class="fas fa-check"></i> Одобрить
+                                </button>
+                            </form>
+
+                            <form action="/admin/reject/{{ review.id }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-reject">
+                                    <i class="fas fa-times"></i> Отклонить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="pagination">
+                    {% if reviews.has_prev %}
+                        <a href="?page={{ reviews.prev_num }}" class="page-link">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span class="current-page">{{ reviews.page }}</span>
+
+                    {% if reviews.has_next %}
+                        <a href="?page={{ reviews.next_num }}" class="page-link">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-list">
+                    <i class="fas fa-inbox"></i>
+                    Нет отзывов для модерации
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

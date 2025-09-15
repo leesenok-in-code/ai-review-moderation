@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Reviews Hub — Сообщество профессионалов</title>
+    <link rel="stylesheet" href="/static/public.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="main-menu">
+        <nav class="cyber-nav">
+            <a href="/" class="neuro-btn">
+                <i class="fas fa-plus-circle"></i> Новый отзыв
+            </a>
+            <a href="/reviews" class="neuro-btn active">
+                <i class="fas fa-chart-network"></i> Все отзывы
+            </a>
+        </nav>
+    </header>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Делимся опытом — выбираем лучшее</h1>
+            <p class="hero-description">
+                Добро пожаловать на Tech Reviews Hub — ваше надежное сообщество отзывов, 
+                где каждый голос важен! Здесь вы найдете реальные истории и подробные оценки 
+                со всех сторон бизнеса. Читайте, сравнивайте и делитесь своим опытом.
+            </p>
+            <button class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </section>
+
+    <section class="how-to-section">
+        <h2 class="section-title">Как оставить отзыв</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <p>Перейдите на страницу <a href="/">«Новый отзыв»</a></p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <p>Заполните простую форму: расскажите о вашем опыте, укажите, с кем был контакт, выберите сценарий и прикрепите документы</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <p>Отправьте отзыв на модерацию, после которой он появится на главной странице</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="importance-section">
+        <h2 class="importance-title">Почему это важно?</h2>
+        <p class="importance-text">
+            Мы хотим создать доверительное сообщество, где отзывы — это не просто слова, 
+            а полезный инструмент <br>
+            Модерация нужна для защиты от фейков, оскорблений и рекламы
+        </p>
+        <p class="call-to-action">
+            🚀 Начните прямо сейчас — каждый опыт важен!
+        </p>
+    </section>
+    
+    <hr class="neon-separator">
+
+    <div class="filter-buttons">
+  <button data-type="all" class="filter-btn active">Все отзывы</button>
+  <button data-type="phys" class="filter-btn">Физическое лицо</button>
+  <button data-type="jur"  class="filter-btn">Юридическое лицо</button>
+</div>
+
+    <div class="anime-container">
+        <div class="neon-grid" id="reviews-grid">
+            {% for review in reviews.items %}
+                <a href="/reviews/{{ review.id }}"
+                    class="cyber-card-link review-item {{ review.person_type }}">
+                    <div class="cyber-card">
+                        <div class="card-header">
+                            <div class="user-badge">
+                                {% if review.person_type == 'jur' %}
+                                    <div class="avatar corporate-avatar">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <span class="user-name">{{ review.name }}</span>
+                                {% else %}
+                                    <div class="avatar anon-avatar">
+                                        <i class="fas fa-user-ninja"></i>
+                                    </div>
+                                    <span class="user-name">
+                                        {{ review.seller_name if review.seller_name else 'Аноним' }}
+                                    </span>
+                                {% endif %}
+
+                            </div>
+                            <div class="timestamp">
+                                <i class="fas fa-clock"></i>
+                                {{ review.created_at.strftime('%d.%m.%Y') }}
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <p class="content-preview">{{ review.content|truncate(200) }}</p>
+                            <div class="cyber-divider"></div>
+                            {% if review.filename %}
+                            <div class="data-attachment">
+                                <i class="fas fa-file-download pulse-icon"></i>
+                                <span>Документ</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <span class="neon-tag">{{ review.scenario | translate_scenario }}</span>
+                            <div class="rating-pulse">
+                                <div class="pulse-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {% else %}
+                <div class="empty-state">
+                    <div class="anime-loader">
+                        <div class="loader-sparkle"></div>
+                        <div class="loader-text">Отзывы загружаются...</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="quantum-pagination">
+            {% if reviews.has_prev %}
+                <a href="?page={{ reviews.prev_num }}" class="quantum-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+            <div class="page-indicator">
+                <span class="current-page">{{ reviews.page }}</span>
+                <span class="page-total">of {{ reviews.pages }}</span>
+            </div>
+            {% if reviews.has_next %}
+                <a href="?page={{ reviews.next_num }}" class="quantum-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <script src="/static/public.js"></script>
+</body>
+</html>

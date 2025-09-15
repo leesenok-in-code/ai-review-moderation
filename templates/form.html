@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оставить отзыв</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="nature-background">
+    <div class="sun"></div>
+    
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+    <div class="cloud cloud-5"></div>
+    
+       <div class="flower flower-1">
+      <div class="flower-stem"></div>
+      <div class="flower-center"></div>
+    </div>
+    <div class="flower flower-2">
+      <div class="flower-stem"></div>
+      <div class="flower-center"></div>
+    </div>
+    <div class="flower flower-3">
+      <div class="flower-stem"></div>
+      <div class="flower-center"></div>
+    </div>
+    
+    <div class="bee bee-1">
+      <div class="bee-wings">
+        <div class="bee-wing"></div>
+        <div class="bee-wing"></div>
+      </div>
+    </div>
+  </div>
+  
+  <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;z-index:1000;pointer-events:none;"></canvas>
+  
+  <div class="toggle-theme">
+    <input 
+      type="checkbox" 
+      id="theme-switcher"
+      aria-label="Переключение между светлой и тёмной темой"
+      title="Сменить цветовую тему"
+    >
+    <label for="theme-switcher" class="theme-toggle">
+      <i class="fas fa-sun" aria-hidden="true"></i>
+      <i class="fas fa-moon" aria-hidden="true"></i>
+      <span class="ball"></span>
+    </label>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1 class="animate__animated animate__fadeInDown">
+        <i class="fas fa-comment-alt" aria-hidden="true"></i> Оставить отзыв
+      </h1>
+      <p class="subtitle animate__animated animate__fadeInDown animate__delay-1s">
+        Поделитесь своим опытом работы с компанией
+      </p>
+    </div>
+
+    <div id="notification" class="notification hidden" role="alert"></div>
+
+    <form id="reviewForm" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+        <h2><i class="fas fa-user" aria-hidden="true"></i> Основная информация</h2>
+        
+        <fieldset class="form-group">
+          <legend class="visually-hidden">Тип лица</legend>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="person_type" 
+                value="phys" 
+                checked
+                aria-label="Физическое лицо"
+              >
+              <span class="radio-custom"></span>
+              Физическое
+            </label>
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="person_type" 
+                value="jur"
+                aria-label="Юридическое лицо"
+              >
+              <span class="radio-custom"></span>
+              Юридическое
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-group">
+          <legend class="visually-hidden">Статус резидента</legend>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="resident" 
+                value="resident" 
+                checked
+                aria-label="Резидент РФ"
+              >
+              <span class="radio-custom"></span>
+              РФ
+            </label>
+            <label class="radio-label">
+              <input 
+                type="radio" 
+                name="resident" 
+                value="nonresident"
+                aria-label="Не резидент РФ"
+              >
+              <span class="radio-custom"></span>
+              Иностранец
+            </label>
+          </div>
+        </fieldset>
+
+        <div id="jur_section" class="hidden">
+          <div class="form-group">
+            <label for="inn">
+              ИНН 
+              <span class="tooltip">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span class="tooltiptext" id="innHint">
+                  Идентификационный номер налогоплательщика (10 цифр для юр. лиц, 12 цифр для ИП)
+                </span>
+              </span>
+            </label>
+            <div class="input-with-button">
+              <input 
+                type="text" 
+                name="inn" 
+                id="inn" 
+                placeholder="10 или 12 цифр"
+                pattern="\d{10,12}"
+                aria-describedby="innHint"
+                required
+              >
+              <button 
+                type="button" 
+                id="fetchCompanyBtn" 
+                class="secondary"
+                aria-label="Найти данные компании по ИНН"
+              >
+                <i class="fas fa-search" aria-hidden="true"></i> Найти компанию
+              </button>
+            </div>
+            <div id="innError" class="error-message" role="alert"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="company_name">Название компании:</label>
+            <input type="text" name="company_name" id="company_name" readonly>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="ogrn">ОГРН:</label>
+              <input type="text" name="ogrn" id="ogrn" readonly>
+            </div>
+            <div class="form-group half-width">
+              <label for="city">Город, страна:</label>
+              <input type="text" name="city" id="city" readonly>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="address">Адрес:</label>
+            <input type="text" name="address" id="address" readonly>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+        <h2><i class="fas fa-scroll" aria-hidden="true"></i> Сценарий отзыва</h2>
+          <div class="form-group">
+            <label for="scenario">Выберите сценарий:</label>
+            <select 
+              name="scenario" 
+              id="scenario" 
+              required
+              aria-required="true"
+            >
+              <option value="" disabled selected>-- Выберите --</option>
+              <option value="prepayment">Предоплата не выполнена</option>
+              <option value="noprepayment">Работа выполнена, не оплачено</option>
+              <option value="other">Другое</option>
+            </select>
+        </div>
+  
+  <div id="prepayment-details" class="hidden scenario-details">
+    <div class="form-row">
+      <div class="form-group half-width">
+        <label for="amount">Сумма:</label>
+        <input 
+          type="number" 
+          name="amount" 
+          id="amount" 
+          min="0" 
+          step="0.01"
+          placeholder="0.00"
+        >
+      </div>
+      <div class="form-group half-width">
+        <label for="currency">Валюта:</label>
+        <select name="currency" id="currency">
+          <option value="RUB">Рубли (RUB)</option>
+          <option value="USD">Доллары (USD)</option>
+          <option value="EUR">Евро (EUR)</option>
+          <option value="other">Другая</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="payment_date">Дата платежа:</label>
+      <input type="date" name="payment_date" id="payment_date">
+    </div>
+  </div>
+  
+  <div id="noprepayment-details" class="hidden scenario-details">
+    <div class="form-row">
+      <div class="form-group half-width">
+        <label for="amount2">Сумма:</label>
+        <input 
+          type="number" 
+          name="amount2" 
+          id="amount2" 
+          min="0" 
+          step="0.01"
+          placeholder="0.00"
+        >
+      </div>
+      <div class="form-group half-width">
+        <label for="currency2">Валюта:</label>
+        <select name="currency2" id="currency2">
+          <option value="RUB">Рубли (RUB)</option>
+          <option value="USD">Доллары (USD)</option>
+          <option value="EUR">Евро (EUR)</option>
+          <option value="other">Другая</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="planned_payment_date">Дата планового платежа:</label>
+      <input type="date" name="planned_payment_date" id="planned_payment_date">
+    </div>
+  </div>
+  
+  <div id="other-details" class="hidden scenario-details">
+    <div class="form-group">
+      <label for="custom_reason">Укажите причину:</label>
+      <textarea 
+        name="custom_reason" 
+        id="custom_reason" 
+        placeholder="Укажите причину вашего отзыва"
+      ></textarea>
+    </div>
+  </div>
+</div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+        <h2><i class="fas fa-user-tie" aria-hidden="true"></i> Продавец/Исполнитель</h2>
+        <div class="form-group">
+          <label for="seller_name">Имя и буква фамилии:</label>
+          <input 
+            type="text" 
+            name="seller_name" 
+            id="seller_name" 
+            placeholder="Иван П."
+            required
+          >
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half-width">
+            <label for="seller_city">Город, страна:</label>
+            <input type="text" name="seller_city" id="seller_city" required>
+          </div>
+          <div class="form-group half-width">
+            <label for="seller_phone">Телефон (последние 4 цифры):</label>
+            <input 
+              type="text" 
+              name="seller_phone" 
+              id="seller_phone" 
+              placeholder="XXXX"
+              pattern="\d{4}"
+              required
+            >
+          </div>
+        </div>
+
+<div class="form-group">
+  <label for="seller_is_company" class="checkbox-label">
+    <input 
+      type="checkbox" 
+      name="seller_is_company" 
+      id="seller_is_company"
+      aria-label="Компания, предоставляющая услуги"
+    >
+    <span class="checkbox-custom"></span>
+    <span>Компания, предоставляющая услуги</span>
+  </label>
+</div>
+
+<div id="seller_company_section" class="hidden">
+  <div class="form-group">
+    <label for="seller_inn">
+      ИНН 
+      <span class="tooltip">
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        <span class="tooltiptext">
+          Идентификационный номер налогоплательщика (10 цифр для юр. лиц, 12 цифр для ИП)
+        </span>
+      </span>
+    </label>
+    <div class="input-with-button">
+      <input 
+        type="text" 
+        name="seller_inn" 
+        id="seller_inn" 
+        placeholder="10 или 12 цифр"
+        pattern="\d{10,12}"
+      >
+      <button 
+        type="button" 
+        id="fetchSellerCompanyBtn" 
+        class="secondary"
+        aria-label="Найти данные компании по ИНН"
+      >
+        <i class="fas fa-search" aria-hidden="true"></i> Найти компанию
+      </button>
+    </div>
+    <div id="seller_innError" class="error-message" role="alert"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="seller_company_name">Название компании:</label>
+    <input type="text" name="seller_company_name" id="seller_company_name" readonly>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group half-width">
+      <label for="seller_ogrn">ОГРН:</label>
+      <input type="text" name="seller_ogrn" id="seller_ogrn" readonly>
+    </div>
+    <div class="form-group half-width">
+      <label for="seller_company_city">Город, страна:</label>
+      <input type="text" name="seller_company_city" id="seller_company_city" readonly>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="seller_company_address">Адрес:</label>
+    <input type="text" name="seller_company_address" id="seller_company_address" readonly>
+  </div>
+</div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+        <h2><i class="fas fa-user" aria-hidden="true"></i> Покупатель/Заказчик</h2>
+        <div class="form-group">
+          <label for="buyer_name">Имя и буква фамилии:</label>
+          <input 
+            type="text" 
+            name="buyer_name" 
+            id="buyer_name" 
+            placeholder="Алексей К."
+            required
+          >
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half-width">
+            <label for="buyer_city">Город, страна:</label>
+            <input type="text" name="buyer_city" id="buyer_city" required>
+          </div>
+          <div class="form-group half-width">
+            <label for="buyer_phone">Телефон (последние 4 цифры):</label>
+            <input 
+              type="text" 
+              name="buyer_phone" 
+              id="buyer_phone" 
+              placeholder="XXXX"
+              pattern="\d{4}"
+              required
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
+        <h2><i class="fas fa-share-alt" aria-hidden="true"></i> Социальные сети и ссылки</h2>
+        <div class="form-row">
+          <div class="form-group half-width">
+            <label for="telegram"><i class="fab fa-telegram" aria-hidden="true"></i> Telegram:</label>
+            <input type="url" name="telegram" id="telegram" placeholder="https://t.me/username">
+          </div>
+          <div class="form-group half-width">
+  <label for="instagram">
+    <i class="fab fa-instagram" aria-hidden="true"></i> Instagram
+    <span class="tooltip">
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
+      <span class="tooltiptext">
+        Признана экстремистской организацией и запрещена на территории РФ
+      </span>
+    </span>
+  </label>
+  <input type="url" name="instagram" id="instagram" placeholder="https://instagram.com/username">
+</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half-width">
+            <label for="youtube"><i class="fab fa-youtube" aria-hidden="true"></i> YouTube:</label>
+            <input type="url" name="youtube" id="youtube" placeholder="https://youtube.com/channel">
+          </div>
+          <div class="form-group half-width">
+            <label for="vk"><i class="fab fa-vk" aria-hidden="true"></i> VK:</label>
+            <input type="url" name="vk" id="vk" placeholder="https://vk.com/username">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half-width">
+            <label for="ok"><i class="fab fa-odnoklassniki" aria-hidden="true"></i> OK:</label>
+            <input type="url" name="ok" id="ok" placeholder="https://ok.ru/profile">
+          </div>
+          <div class="form-group half-width">
+  <label for="fb">
+    <i class="fab fa-facebook" aria-hidden="true"></i> Facebook
+    <span class="tooltip">
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
+      <span class="tooltiptext">
+        Признана экстремистской организацией и запрещена на территории РФ
+      </span>
+    </span>
+  </label>
+  <input type="url" name="fb" id="fb" placeholder="https://facebook.com/username">
+</div>
+        </div>
+
+        <div class="form-group">
+          <label for="website"><i class="fas fa-globe" aria-hidden="true"></i> Сайт:</label>
+          <input type="url" name="website" id="website" placeholder="https://example.com">
+        </div>
+      </div>
+
+<div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">
+  <h2><i class="fas fa-file-alt" aria-hidden="true"></i> Документы для проверки</h2>
+  <div class="form-group">
+    <label for="document_type">Тип документа:</label>
+    <select 
+      name="document_type" 
+      id="document_type"
+      aria-label="Выберите тип документа"
+      required
+    >
+      <option value="" disabled selected>-- Выберите --</option>
+      <option value="contract">Договор</option>
+      <option value="payment">Платёжка</option>
+      <option value="act">Акт</option>
+      <option value="upd">УПД/ТТН</option>
+      <option value="other">Другое</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="document">Загрузить документ (до 2MB):</label>
+    <div class="file-upload">
+      <label class="file-upload-label">
+        <input 
+          type="file" 
+          name="document" 
+          id="document" 
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+          aria-label="Выберите файл для загрузки"
+          required
+        >
+        <span class="file-upload-button"><i class="fas fa-upload" aria-hidden="true"></i> Выберите файл</span>
+        <span class="file-upload-text" id="file-name">Файл не выбран</span>
+      </label>
+    </div>
+    <div class="file-hint">Поддерживаемые форматы: PDF, DOC, DOCX, JPG, PNG</div>
+    <div id="file-preview" class="file-preview"></div>
+  </div>
+</div>
+
+<div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.65s;">
+  <h2><i class="fas fa-images" aria-hidden="true"></i> Изображения для отзыва</h2>
+  <div class="form-group">
+    <label for="work_images">Загрузить изображения (до 5 файлов, до 2MB каждый):</label>
+    <div class="file-upload">
+      <label class="file-upload-label">
+        <input 
+          type="file" 
+          name="work_images" 
+          id="work_images" 
+          accept=".jpg,.jpeg,.png"
+          aria-label="Выберите изображения"
+          multiple
+        >
+        <span class="file-upload-button"><i class="fas fa-upload" aria-hidden="true"></i> Выберите файлы</span>
+        <span class="file-upload-text" id="images-names">Файлы не выбраны</span>
+      </label>
+    </div>
+    <div class="file-hint">Поддерживаемые форматы: JPG, PNG</div>
+    <div class="file-hint">Не допускается размещение изображений лиц граждан (в силу положений ст.152.1 Гражданского кодекса РФ)</div>
+    <div id="images-preview" class="file-preview"></div>
+  </div>
+</div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.7s;">
+        <h2><i class="fas fa-comment-dots" aria-hidden="true"></i> Текст отзыва</h2>
+        <div class="form-group">
+          <textarea 
+            name="content" 
+            id="content" 
+            placeholder="Не допускается :
+          • оскорбление, возбуждение социальной, национальной, расовой или религиозной
+            вражды, унижение чести и человеческого достоинства (Статья 5.61 КоАП РФ, УК РФ Статья 282)
+          • Публикация сведений несоответствующих действительности (152 ГК РФ)"
+            required
+            aria-required="true"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-section animate__animated animate__fadeInUp" style="animation-delay: 0.75s;">
+  <h2><i class="fas fa-envelope" aria-hidden="true"></i> Ваш Email</h2>
+  <div class="form-group">
+    <label for="email">
+      Email 
+      <span class="tooltip">
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        <span class="tooltiptext" id="emailHint">
+          На указанную почту придёт причина отказа публикации отзыва
+        </span>
+      </span>
+    </label>
+    <input
+      type="email"
+      name="email"
+      id="email"
+      placeholder="example@mail.com"
+      required
+      aria-required="true"
+      aria-describedby="emailHint"
+    >
+  </div>
+</div>
+      <div class="form-group terms animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
+        <div class="checkbox-group">
+          <input 
+            type="checkbox" 
+            name="agree" 
+            id="agree" 
+            required
+            aria-required="true"
+          >
+          <label for="agree" class="checkbox-label">
+            <span class="checkbox-custom"></span>
+            Я подтверждаю достоверность предоставленной информации и соглашаюсь на её публикацию
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions animate__animated animate__fadeInUp" style="animation-delay: 0.9s;">
+        <button 
+          type="submit" 
+          id="submitBtn"
+          aria-label="Отправить отзыв"
+        >
+          <span class="button-text">Отправить отзыв</span>
+          <span class="spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
+        </button>
+      </div>
+    </form>
+  </div>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
