@@ -8,3 +8,4 @@ test_document.pdf
 *.mp4
 *.pickle
 *.pickle
+error.log
