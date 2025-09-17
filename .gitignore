@@ -1,2 +1,7 @@
 __pycache__/
 static/uploads/
+.vscode/
+*.pyc
+parsetab.py
+error_screenshot.png
+test_document.pdf
