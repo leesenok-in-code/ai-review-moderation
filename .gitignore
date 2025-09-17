@@ -7,8 +7,6 @@ error_screenshot.png
 test_document.pdf
 *.mp4
 *.pickle
-*.pickle
-error.log
 error.log
 *.h5
 *.pkl
