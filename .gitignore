@@ -9,3 +9,6 @@ test_document.pdf
 *.pickle
 *.pickle
 error.log
+error.log
+*.h5
+*.pkl
