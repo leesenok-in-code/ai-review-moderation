@@ -5,3 +5,6 @@ static/uploads/
 parsetab.py
 error_screenshot.png
 test_document.pdf
+*.mp4
+*.pickle
+*.pickle
